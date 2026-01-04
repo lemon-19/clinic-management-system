@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Carbon\Carbon;
 
 class StoreAppointmentRequest extends FormRequest
 {
@@ -25,5 +26,24 @@ class StoreAppointmentRequest extends FormRequest
             'appointment_date' => ['required', 'date'],
             'appointment_time' => ['required', 'date'],
         ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $data = $this->all();
+
+            if (empty($data['doctor_id']) || empty($data['clinic_id']) || empty($data['appointment_time'])) {
+                return;
+            }
+
+            $appointmentStart = Carbon::parse($data['appointment_time']);
+            [$ok, $message] = \App\Models\Appointment::isSlotAvailable($data['doctor_id'], $data['clinic_id'], $appointmentStart);
+
+            if (! $ok) {
+                \Illuminate\Support\Facades\Log::info('Slot availability check failed in request', ['doctor_id' => $data['doctor_id'], 'clinic_id' => $data['clinic_id'], 'appointment_time' => $appointmentStart->toDateTimeString(), 'message' => $message]);
+                $validator->errors()->add('appointment_time', $message);
+            }
+        });
     }
 }

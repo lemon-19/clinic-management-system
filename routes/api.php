@@ -68,7 +68,10 @@ Route::prefix('api/v1')->group(function () {
         Route::patch('appointments/{appointment}', [AppointmentController::class, 'update']);
         Route::post('appointments/{appointment}/cancel', [AppointmentController::class, 'cancel']);
         Route::post('appointments/{appointment}/confirm', [AppointmentController::class, 'confirm']);
+        Route::post('appointments/{appointment}/complete', [AppointmentController::class, 'complete']);
         Route::post('appointments/{appointment}/reschedule', [AppointmentController::class, 'reschedule']);
+        Route::post('appointments/bulk-cancel', [AppointmentController::class, 'bulkCancel']);
+        Route::post('appointments/bulk-reschedule-conflicts', [AppointmentController::class, 'bulkRescheduleConflicts']);
         Route::delete('appointments/{appointment}', [AppointmentController::class, 'destroy']);
         Route::post('appointments/{id}/restore', [AppointmentController::class, 'restore']);
 
