@@ -311,4 +311,19 @@ class Appointment extends Model
 
         return $result;
     }
+
+    /**
+     * Boot method - listen to appointment status changes
+     */
+    protected static function booted(): void
+    {
+        static::updated(function ($appointment) {
+            // Auto-create medical record when appointment is completed
+            if ($appointment->isDirty('status') && 
+                $appointment->status?->value === 'completed') {
+                \App\Http\Controllers\Api\MedicalRecordController::createFromAppointment($appointment);
+            }
+        });
+    }
+
 }

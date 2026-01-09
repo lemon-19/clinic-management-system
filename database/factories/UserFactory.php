@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\UserType;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
@@ -28,7 +29,7 @@ class UserFactory extends Factory
             'email' => fake()->unique()->safeEmail(),
             'username' => fake()->unique()->userName(),
             'password' => static::$password ??= Hash::make('password'),
-            'user_type' => fake()->randomElement(['admin','doctor','secretary','patient']),
+            'user_type' => UserType::PATIENT, // Default to PATIENT instead of random
             'first_name' => fake()->firstName(),
             'middle_name' => fake()->optional()->firstName(),
             'last_name' => fake()->lastName(),
@@ -48,6 +49,48 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Create an admin user
+     */
+    public function admin(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'user_type' => UserType::ADMIN,
+        ]);
+    }
+
+    /**
+     * Create a doctor user
+     */
+    public function doctor(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'user_type' => UserType::DOCTOR,
+        ]);
+    }
+
+    /**
+     * Create a patient user
+     */
+    public function patient()
+    {
+        return $this->state(function (array $attributes) {
+            return [
+                'user_type' => \App\Enums\UserType::PATIENT,
+            ];
+        });
+    }
+
+    /**
+     * Create a secretary user
+     */
+    public function secretary(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'user_type' => UserType::SECRETARY,
         ]);
     }
 }

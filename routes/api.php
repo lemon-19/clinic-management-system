@@ -5,77 +5,67 @@ use App\Http\Controllers\Api\ClinicController;
 use App\Http\Controllers\Api\DoctorController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\MedicalRecordController;
+use App\Http\Controllers\Api\RolePermissionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('api/v1')->group(function () {
-    // Auth
-    Route::post('login', [\App\Http\Controllers\Api\AuthController::class, 'login']);
-    Route::post('register', [\App\Http\Controllers\Api\AuthController::class, 'register']);
+    // Auth routes (no permission needed)
+    Route::post('login', [AuthController::class, 'login']);
+    Route::post('register', [AuthController::class, 'register']);
 
-    Route::post('logout', [\App\Http\Controllers\Api\AuthController::class, 'logout'])->middleware('auth:sanctum');
-    Route::get('me', [\App\Http\Controllers\Api\AuthController::class, 'me'])->middleware('auth:sanctum');
-
-    // Token management
     Route::middleware('auth:sanctum')->group(function () {
-        Route::get('tokens', [\App\Http\Controllers\Api\AuthController::class, 'tokens']);
-        Route::delete('tokens/{id}', [\App\Http\Controllers\Api\AuthController::class, 'revokeToken']);
-    });
+        // Auth endpoints
+        Route::get('me', [AuthController::class, 'me']);
+        Route::post('logout', [AuthController::class, 'logout']);
 
-    // Public resources (read)
-    Route::apiResource('clinics', ClinicController::class)->only(['index','show']);
-    Route::get('clinics/{clinic}/doctors', [ClinicController::class, 'doctors']);
-    Route::get('clinics/{clinic}/services', [ClinicController::class, 'services']);
+        Route::get('me/permissions', [RolePermissionController::class, 'getUserPermissions']);
 
-    Route::apiResource('services', ServiceController::class)->only(['index','show']);
+        // ===== CLINIC ROUTES WITH PERMISSION CHECKS =====
+        Route::middleware('permission:view_clinics')->get('clinics', [ClinicController::class, 'index']);
+        Route::middleware('permission:view_clinics')->get('clinics/{clinic}', [ClinicController::class, 'show']);
+        Route::middleware('permission:create_clinic')->post('clinics', [ClinicController::class, 'store']);
+        Route::middleware('permission:update_clinic')->put('clinics/{clinic}', [ClinicController::class, 'update']);
+        Route::middleware('permission:delete_clinic')->delete('clinics/{clinic}', [ClinicController::class, 'destroy']);
+        Route::middleware('permission:restore_clinic')->post('clinics/{clinic}/restore', [ClinicController::class, 'restore']);
 
-    Route::apiResource('doctors', DoctorController::class)->only(['index','show']);
-    Route::get('doctors/{doctor}/clinics', [DoctorController::class, 'clinics']);
-    Route::get('doctors/{doctor}/schedules', [DoctorController::class, 'schedules']);
+        // ===== DOCTOR ROUTES WITH PERMISSION CHECKS =====
+        Route::middleware('permission:view_doctors')->get('doctors', [DoctorController::class, 'index']);
+        Route::middleware('permission:view_doctors')->get('doctors/{doctor}', [DoctorController::class, 'show']);
+        Route::middleware('permission:create_doctor')->post('doctors', [DoctorController::class, 'store']);
+        Route::middleware('permission:update_doctor')->put('doctors/{doctor}', [DoctorController::class, 'update']);
+        Route::middleware('permission:delete_doctor')->delete('doctors/{doctor}', [DoctorController::class, 'destroy']);
 
-    Route::apiResource('users', UserController::class)->only(['index','show','store']);
+        // ===== APPOINTMENT ROUTES WITH PERMISSION CHECKS =====
+        Route::middleware('permission:view_appointments')->get('appointments', [AppointmentController::class, 'index']);
+        Route::middleware('permission:create_appointment')->post('appointments', [AppointmentController::class, 'store']);
+        Route::middleware('permission:view_appointments')->get('appointments/{appointmentId}', [AppointmentController::class, 'show']);
+        Route::middleware('permission:cancel_appointment')->post('appointments/{appointmentId}/cancel', [AppointmentController::class, 'cancel']);
+        Route::middleware('permission:confirm_appointment')->post('appointments/{appointmentId}/confirm', [AppointmentController::class, 'confirm']);
+        Route::middleware('permission:complete_appointment')->post('appointments/{appointmentId}/complete', [AppointmentController::class, 'complete']);
 
-    // Protected write endpoints
-    Route::middleware('auth:sanctum')->group(function () {
-        Route::post('clinics', [ClinicController::class, 'store']);
-        Route::put('clinics/{clinic}', [ClinicController::class, 'update']);
-        Route::patch('clinics/{clinic}', [ClinicController::class, 'update']);
-        Route::delete('clinics/{clinic}', [ClinicController::class, 'destroy']);
-        Route::post('clinics/{clinic}/restore', [ClinicController::class, 'restore']);
+        // ===== MEDICAL RECORDS ROUTES WITH PERMISSION CHECKS =====
+        Route::middleware('permission:view_medical_records')->get('patients/{patientId}/medical-records', [MedicalRecordController::class, 'indexByPatient']);
+        Route::middleware('permission:create_medical_record')->post('medical-records', [MedicalRecordController::class, 'store']);
+        Route::middleware('permission:view_medical_records')->get('medical-records/{recordId}', [MedicalRecordController::class, 'show']);
+        Route::middleware('permission:update_medical_record')->put('medical-records/{recordId}', [MedicalRecordController::class, 'update']);
+        Route::middleware('permission:delete_medical_record')->delete('medical-records/{recordId}', [MedicalRecordController::class, 'destroy']);
 
-        Route::post('services', [ServiceController::class, 'store']);
-        Route::put('services/{service}', [ServiceController::class, 'update']);
-        Route::patch('services/{service}', [ServiceController::class, 'update']);
-        Route::delete('services/{service}', [ServiceController::class, 'destroy']);
-        Route::post('services/{id}/restore', [ServiceController::class, 'restore']);
+        // ===== ROLE & PERMISSION MANAGEMENT (ADMIN ONLY) =====
+        Route::middleware('role:admin')->group(function () {
+            Route::get('roles', [RolePermissionController::class, 'listRoles']);
+            Route::get('permissions', [RolePermissionController::class, 'listPermissions']);
+            Route::get('roles/{id}', [RolePermissionController::class, 'showRole']);
+            
+            Route::post('users/assign-role', [RolePermissionController::class, 'assignRoleToUser']);
+            Route::post('users/remove-role', [RolePermissionController::class, 'removeRoleFromUser']);
+            Route::get('users/{user}/permissions', [RolePermissionController::class, 'getUserPermissions']);
+            
+            Route::post('roles/grant-permission', [RolePermissionController::class, 'grantPermissionToRole']);
+            Route::post('roles/revoke-permission', [RolePermissionController::class, 'revokePermissionFromRole']);
+        });
 
-        Route::post('doctors', [DoctorController::class, 'store']);
-        Route::put('doctors/{doctor}', [DoctorController::class, 'update']);
-        Route::patch('doctors/{doctor}', [DoctorController::class, 'update']);
-        Route::delete('doctors/{doctor}', [DoctorController::class, 'destroy']);
-        Route::post('doctors/{id}/restore', [DoctorController::class, 'restore']);
 
-        Route::post('users/{id}/restore', [UserController::class, 'restore']);
-        Route::put('users/{user}', [UserController::class, 'update']);
-        Route::patch('users/{user}', [UserController::class, 'update']);
-        Route::delete('users/{user}', [UserController::class, 'destroy']);
-        Route::post('users/{user}/password', [UserController::class, 'changePassword']);
-        // Change current user's password
-        Route::post('me/password', [UserController::class, 'changeMyPassword']);
-
-        Route::post('appointments', [AppointmentController::class, 'store']);
-        Route::put('appointments/{appointment}', [AppointmentController::class, 'update']);
-        Route::patch('appointments/{appointment}', [AppointmentController::class, 'update']);
-        Route::post('appointments/{appointment}/cancel', [AppointmentController::class, 'cancel']);
-        Route::post('appointments/{appointment}/confirm', [AppointmentController::class, 'confirm']);
-        Route::post('appointments/{appointment}/complete', [AppointmentController::class, 'complete']);
-        Route::post('appointments/{appointment}/reschedule', [AppointmentController::class, 'reschedule']);
-        Route::post('appointments/bulk-cancel', [AppointmentController::class, 'bulkCancel']);
-        Route::post('appointments/bulk-reschedule-conflicts', [AppointmentController::class, 'bulkRescheduleConflicts']);
-        Route::delete('appointments/{appointment}', [AppointmentController::class, 'destroy']);
-        Route::post('appointments/{id}/restore', [AppointmentController::class, 'restore']);
-
-        // Me endpoints
-        Route::get('me/appointments', [AppointmentController::class, 'index'])->name('me.appointments');
     });
 });
