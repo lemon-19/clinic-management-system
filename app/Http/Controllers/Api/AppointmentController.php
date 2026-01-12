@@ -40,6 +40,16 @@ class AppointmentController extends Controller
             $data['patient_id'] = $request->user()->id;
         }
 
+        // Authorization check: users can only create appointments for themselves unless they're admin/doctor
+        if (array_key_exists('patient_id', $data)) {
+            if ($data['patient_id'] != $request->user()->id &&
+                !in_array($request->user()->user_type, [UserType::ADMIN, UserType::DOCTOR])) {
+                return response()->json([
+                    'message' => 'You can only create appointments for yourself'
+                ], 403);
+            }
+        }
+
         // default status to pending if not provided
         if (empty($data['status'])) {
             $data['status'] = \App\Enums\AppointmentStatus::PENDING;

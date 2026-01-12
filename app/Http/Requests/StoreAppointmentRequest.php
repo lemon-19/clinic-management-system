@@ -18,7 +18,7 @@ class StoreAppointmentRequest extends FormRequest
         return [
             'clinic_id' => ['required', 'exists:clinics,id'],
             'doctor_id' => ['required', 'exists:doctors,id'],
-            'patient_id' => ['required', 'exists:users,id'],
+            'patient_id' => ['nullable', 'exists:users,id'], // Changed from 'required' to 'nullable'
             'appointment_type' => ['nullable', Rule::in(['in_person','telemedicine'])],
             'status' => ['nullable', 'string', 'max:50'],
             'reason' => ['nullable', 'string'],

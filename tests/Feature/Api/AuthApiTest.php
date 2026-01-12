@@ -73,6 +73,7 @@ class AuthApiTest extends TestCase
         $token = $user->createToken('t')->plainTextToken;
 
         $resp = $this->withHeader('Authorization', 'Bearer '.$token)->postJson('/api/v1/me/password', [
+            'current_password' => 'password', // ✅ must send current password
             'password' => 'newpassword',
             'password_confirmation' => 'newpassword',
         ]);
@@ -81,4 +82,5 @@ class AuthApiTest extends TestCase
 
         $this->assertTrue(\Illuminate\Support\Facades\Hash::check('newpassword', $user->fresh()->password));
     }
+
 }
