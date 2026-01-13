@@ -59,7 +59,7 @@ class MedicalRecord extends Model
         return $this->belongsTo(Doctor::class);
     }
 
-    public function vitalSigns(): HasMany
+    public function vitalSigns()
     {
         return $this->hasMany(VitalSign::class);
     }

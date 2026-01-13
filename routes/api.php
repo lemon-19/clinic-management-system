@@ -9,7 +9,8 @@ use App\Http\Controllers\Api\MedicalRecordController;
 use App\Http\Controllers\Api\RolePermissionController;
 use App\Http\Controllers\Api\DoctorScheduleController;
 use App\Http\Controllers\Api\AuthController;
-use App\Http\Controllers\Auth\PasswordController; // <-- Correct namespace
+use App\Http\Controllers\Auth\PasswordController;
+use App\Http\Controllers\Api\VitalSignController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -88,6 +89,16 @@ Route::prefix('api/v1')->group(function () {
         Route::get('doctor-schedules/available-slots', [DoctorScheduleController::class, 'getAvailableSlots']);
         Route::patch('doctor-schedules/{scheduleId}/toggle-availability', [DoctorScheduleController::class, 'toggleAvailability']);
         Route::get('doctors/{doctorId}/schedules', [DoctorScheduleController::class, 'getDoctorSchedules']);
+
+        // ------------------ VITAL SIGNS ------------------
+        Route::middleware('permission:create_vital_signs')->post('vital-signs', [VitalSignController::class, 'store']);
+        Route::middleware('permission:view_vital_signs')->get('medical-records/{recordId}/vital-signs', [VitalSignController::class, 'indexByRecord']);
+        Route::middleware('permission:view_vital_signs')->get('medical-records/{recordId}/vital-signs/latest', [VitalSignController::class, 'getLatest']);
+        Route::middleware('permission:view_vital_signs')->get('medical-records/{recordId}/vital-signs/trends', [VitalSignController::class, 'getTrends']);
+        Route::middleware('permission:view_vital_signs')->get('patients/{patientId}/vital-signs', [VitalSignController::class, 'indexByPatient']);
+        Route::middleware('permission:view_vital_signs')->get('vital-signs/{id}', [VitalSignController::class, 'show']);
+        Route::middleware('permission:update_vital_signs')->put('vital-signs/{id}', [VitalSignController::class, 'update']);
+        Route::middleware('permission:delete_vital_signs')->delete('vital-signs/{id}', [VitalSignController::class, 'destroy']);
 
         // ------------------ ROLE & PERMISSION MANAGEMENT ------------------
         Route::middleware('role:admin')->group(function () {
