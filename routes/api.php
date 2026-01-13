@@ -11,6 +11,7 @@ use App\Http\Controllers\Api\DoctorScheduleController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Api\VitalSignController;
+use App\Http\Controllers\Api\PrescriptionController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -99,6 +100,19 @@ Route::prefix('api/v1')->group(function () {
         Route::middleware('permission:view_vital_signs')->get('vital-signs/{id}', [VitalSignController::class, 'show']);
         Route::middleware('permission:update_vital_signs')->put('vital-signs/{id}', [VitalSignController::class, 'update']);
         Route::middleware('permission:delete_vital_signs')->delete('vital-signs/{id}', [VitalSignController::class, 'destroy']);
+
+        // ------------------ PRESCRIPTIONS ------------------
+        Route::middleware('permission:create_prescriptions')->post('prescriptions', [PrescriptionController::class, 'store']);
+        Route::middleware('permission:view_prescriptions')->get('medical-records/{recordId}/prescriptions', [PrescriptionController::class, 'indexByRecord']);
+        Route::middleware('permission:view_prescriptions')->get('patients/{patientId}/prescriptions', [PrescriptionController::class, 'indexByPatient']);
+        Route::middleware('permission:view_prescriptions')->get('prescriptions/{id}', [PrescriptionController::class, 'show']);
+        Route::middleware('permission:update_prescriptions')->put('prescriptions/{id}', [PrescriptionController::class, 'update']);
+        Route::middleware('permission:delete_prescriptions')->delete('prescriptions/{id}', [PrescriptionController::class, 'destroy']);
+        Route::middleware('permission:update_prescriptions')->post('prescriptions/{id}/medications', [PrescriptionController::class, 'addMedication']);
+        Route::middleware('permission:update_prescriptions')->delete('prescriptions/{id}/medications/{medicationId}', [PrescriptionController::class, 'removeMedication']);
+        Route::middleware('permission:update_prescriptions')->patch('prescriptions/{id}/visibility', [PrescriptionController::class, 'toggleVisibility']);
+        Route::middleware('permission:view_prescriptions')->get('prescriptions/{id}/print', [PrescriptionController::class, 'print']);
+
 
         // ------------------ ROLE & PERMISSION MANAGEMENT ------------------
         Route::middleware('role:admin')->group(function () {
