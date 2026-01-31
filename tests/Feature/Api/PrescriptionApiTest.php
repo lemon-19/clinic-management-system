@@ -210,7 +210,8 @@ class PrescriptionApiTest extends TestCase
         $medicalRecord1 = MedicalRecord::factory()->create([
             'patient_id' => $patient->id,
             'doctor_id' => $doctor->id,
-            'clinic_id' => $clinic->id,
+            'clinic_id' => $clinic->id, 
+            
         ]);
 
         $medicalRecord2 = MedicalRecord::factory()->create([

@@ -12,6 +12,8 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Auth\PasswordController;
 use App\Http\Controllers\Api\VitalSignController;
 use App\Http\Controllers\Api\PrescriptionController;
+use App\Http\Controllers\Api\NotificationController;
+use App\Services\NotificationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -125,5 +127,28 @@ Route::prefix('api/v1')->group(function () {
             Route::post('roles/grant-permission', [RolePermissionController::class, 'grantPermissionToRole']);
             Route::post('roles/revoke-permission', [RolePermissionController::class, 'revokePermissionFromRole']);
         });
+
+            // Notifications
+            Route::prefix('notifications')->group(function () {
+                Route::get('/', [NotificationController::class, 'index']);
+                Route::get('/unread-count', function (Request $request) {
+                    $service = app(NotificationService::class);
+                    return response()->json([
+                        'unread_count' => $service->getUnreadCount($request->user()->id)
+                    ]);
+                });
+                Route::patch('/{notificationId}/read', [NotificationController::class, 'markAsRead']);
+                Route::patch('/read-all', [NotificationController::class, 'markAllAsRead']);
+                Route::delete('/{notificationId}', [NotificationController::class, 'destroy']);
+                
+                // Preferences
+                Route::prefix('preferences')->group(function () {
+                    Route::get('/', [NotificationController::class, 'getPreferences']);
+                    Route::put('/', [NotificationController::class, 'updatePreferences']);
+                });
+            });
+
+
+            
     });
 });

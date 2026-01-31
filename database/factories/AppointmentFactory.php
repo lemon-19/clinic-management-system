@@ -48,4 +48,34 @@ class AppointmentFactory extends Factory
             'appointment_time' => $appointmentTime,
         ];
     }
+
+    public function withNotificationPreference(): static
+    {
+        return $this->afterCreating(function ($appointment) {
+            $appointment->patient->notificationPreference ?? 
+                $appointment->patient->notificationPreference()->create([
+                    'appointment_confirmation' => true,
+                    'appointment_reminder_24h' => true,
+                    'appointment_reminder_1h' => true,
+                    'email_enabled' => true,
+                    'in_app_enabled' => true,
+                ]);
+        });
+    }
+
+    public function confirmed(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'confirmed',
+        ]);
+    }
+
+    public function upcoming(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'status' => 'confirmed',
+            'appointment_date' => now()->addDay(),
+            'appointment_time' => now()->addDay()->setHour(14)->setMinute(0)->setSecond(0),
+        ]);
+    }
 }

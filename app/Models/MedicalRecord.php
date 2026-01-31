@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Services\NotificationService;
 
 class MedicalRecord extends Model
 {
@@ -77,5 +78,20 @@ class MedicalRecord extends Model
     public function documents(): HasMany
     {
         return $this->hasMany(MedicalDocument::class);
+    }
+    
+    protected static function booted(): void
+    {
+        static::created(function ($record) {
+            if ($record->is_visible_to_patient) {
+                app(NotificationService::class)->sendMedicalRecordShared($record);
+            }
+        });
+
+        static::updated(function ($record) {
+            if ($record->isDirty('is_visible_to_patient') && $record->is_visible_to_patient) {
+                app(NotificationService::class)->sendMedicalRecordShared($record);
+            }
+        });
     }
 }

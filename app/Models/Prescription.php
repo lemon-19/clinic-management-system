@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use App\Services\NotificationService;
 
 class Prescription extends Model
 {
@@ -39,4 +40,20 @@ class Prescription extends Model
     {
         return $this->hasMany(PrescriptionMedication::class);
     }
+
+    protected static function booted(): void
+    {
+        static::created(function ($prescription) {
+            if ($prescription->is_visible_to_patient) {
+                app(NotificationService::class)->sendPrescriptionAdded($prescription);
+            }
+        });
+
+        static::updated(function ($prescription) {
+            if ($prescription->isDirty('is_visible_to_patient') && $prescription->is_visible_to_patient) {
+                app(NotificationService::class)->sendPrescriptionAdded($prescription);
+            }
+        });
+    }
+    
 }

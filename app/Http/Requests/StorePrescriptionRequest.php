@@ -43,4 +43,3 @@ class StorePrescriptionRequest extends FormRequest
         ];
     }
 }
-?>

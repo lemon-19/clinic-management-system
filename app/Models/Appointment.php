@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Carbon\Carbon;
+use App\Services\NotificationService;
 
 class Appointment extends Model
 {
@@ -323,7 +324,24 @@ class Appointment extends Model
                 $appointment->status?->value === 'completed') {
                 \App\Http\Controllers\Api\MedicalRecordController::createFromAppointment($appointment);
             }
+            // Send confirmation when status changes to confirmed
+            if ($appointment->isDirty('status') && $appointment->status?->value === 'confirmed') {
+                app(NotificationService::class)->sendAppointmentConfirmation($appointment);
+            }
+
+            // Auto-create medical record when completed
+            if ($appointment->isDirty('status') && $appointment->status?->value === 'completed') {
+                \App\Http\Controllers\Api\MedicalRecordController::createFromAppointment($appointment);
+            }
         });
+
+        static::created(function ($appointment) {
+        // Send confirmation when appointment is created
+        if ($appointment->status?->value === 'confirmed') {
+            app(NotificationService::class)->sendAppointmentConfirmation($appointment);
+        }
+    });
     }
+
 
 }
