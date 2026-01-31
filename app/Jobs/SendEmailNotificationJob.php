@@ -30,9 +30,9 @@ class SendEmailNotificationJob implements ShouldQueue
     {
         try {
             // Use Mail::send with view template (existing templates use blade views)
-            Mail::send($this->template, $this->data, function ($m) {
-                $m->to($this->email)->subject($this->subject);
-            });
+            // Use Mailable and queue it for better structure
+            \Illuminate\Support\Facades\Mail::to($this->email)
+                ->queue(new \App\Mail\GenericNotificationMail($this->subject, $this->template, $this->data));
 
             // Resolve user id for the log entry
             $userId = null;

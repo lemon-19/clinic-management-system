@@ -16,12 +16,15 @@ class Notification extends Model
 
     protected $table = 'notifications_custom';
     protected $fillable = [
-        'user_id', 'type', 'title', 'message', 'data', 
+        'user_id', 'type', 'title', 'message', 'data',
+        'appointment_id', 'hours_before',
         'read_at', 'sent_at', 'scheduled_at',
     ];
 
     protected $casts = [
         'data' => 'array',
+        'appointment_id' => 'integer',
+        'hours_before' => 'integer',
         'read_at' => 'datetime',
         'sent_at' => 'datetime',
         'scheduled_at' => 'datetime',

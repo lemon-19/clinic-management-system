@@ -70,4 +70,29 @@ class PasswordResetTest extends TestCase
             return true;
         });
     }
+
+    public function test_forgot_password_endpoint_is_throttled(): void
+    {
+        $user = User::factory()->create();
+
+        foreach (range(1, 7) as $i) {
+            $response = $this->post('/forgot-password', ['email' => $user->email]);
+        }
+
+        $this->assertTrue($response->status() === 429 || $response->status() === 200);
+
+        // If throttling is configured, at least one request should become 429
+        // Ensure endpoint has a throttle middleware applied
+        $throttled = false;
+        foreach (range(1, 7) as $i) {
+            $r = $this->post('/forgot-password', ['email' => $user->email]);
+            if ($r->status() === 429) {
+                $throttled = true;
+                break;
+            }
+        }
+
+        $this->assertTrue($throttled, 'Forgot password endpoint should be throttled to prevent abuse');
+    }
 }
+

@@ -41,12 +41,15 @@ class SendEmailNotificationJobTest extends TestCase
             'status' => 'successful',
             'channel' => 'email',
         ]);
+
+        \Illuminate\Support\Facades\Mail::assertQueued(\App\Mail\GenericNotificationMail::class);
     }
 
     public function test_job_creates_failed_log_on_exception(): void
     {
-        // Make Mail::send throw
-        Mail::shouldReceive('send')->andThrow(new \Exception('SMTP down'));
+        // Make Mail queue throw when attempting to queue the mailable
+        Mail::shouldReceive('to')->andReturnSelf();
+        Mail::shouldReceive('queue')->andThrow(new \Exception('SMTP down'));
 
         $user = User::factory()->create(['email' => 'mail-fail@test.com']);
 

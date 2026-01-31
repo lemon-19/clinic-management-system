@@ -155,6 +155,8 @@ class NotificationService
                 'title' => "Appointment Reminder - {$reminderText}",
                 'message' => "Reminder: Your appointment with {$doctor->user->full_name} is {$reminderText}",
                 'data' => ['appointment_id' => $appointment->id, 'hours_before' => $hoursBefore],
+                'appointment_id' => $appointment->id,
+                'hours_before' => $hoursBefore,
                 'sent_at' => now(),
             ]);
 
@@ -204,6 +206,8 @@ class NotificationService
                             'title' => "Upcoming Appointment - {$reminderText}",
                             'message' => "Reminder: Your appointment with {$patient->full_name} is {$reminderText}",
                             'data' => ['appointment_id' => $appointment->id, 'hours_before' => $hoursBefore],
+                            'appointment_id' => $appointment->id,
+                            'hours_before' => $hoursBefore,
                             'sent_at' => now(),
                         ]);
 

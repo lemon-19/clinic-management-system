@@ -47,6 +47,9 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
+        // Immediately send verification notification after registration
+        $user->sendEmailVerificationNotification();
+
         return redirect(route('dashboard', absolute: false));
     }
 }
