@@ -47,6 +47,19 @@ Route::prefix('api/v1')->group(function () {
         // ------------------ CLINICS ------------------
         Route::middleware('permission:view_clinics')->get('clinics', [ClinicController::class, 'index']);
         Route::middleware('permission:view_clinics')->get('clinics/{clinic}', [ClinicController::class, 'show']);
+
+        // Clinic Documents (owners/staff)
+        Route::get('clinics/{clinic}/documents', [\App\Http\Controllers\Api\ClinicDocumentController::class, 'index']);
+        Route::post('clinics/{clinic}/documents', [\App\Http\Controllers\Api\ClinicDocumentController::class, 'store']);
+        Route::get('clinics/{clinic}/documents/{document}', [\App\Http\Controllers\Api\ClinicDocumentController::class, 'show']);
+        Route::get('clinics/{clinic}/documents/{document}/download', [\App\Http\Controllers\Api\ClinicDocumentController::class, 'download']);
+
+        // Admin routes for document review
+        Route::middleware('role:admin')->prefix('admin')->group(function () {
+            Route::get('clinic-documents', [\App\Http\Controllers\Api\Admin\ClinicDocumentReviewController::class, 'index']);
+            Route::get('clinic-documents/{document}', [\App\Http\Controllers\Api\Admin\ClinicDocumentReviewController::class, 'show']);
+            Route::post('clinic-documents/{document}/review', [\App\Http\Controllers\Api\Admin\ClinicDocumentReviewController::class, 'review']);
+        });
         Route::middleware('permission:create_clinic')->post('clinics', [ClinicController::class, 'store']);
         Route::middleware('permission:update_clinic')->put('clinics/{clinic}', [ClinicController::class, 'update']);
         Route::middleware('permission:delete_clinic')->delete('clinics/{clinic}', [ClinicController::class, 'destroy']);

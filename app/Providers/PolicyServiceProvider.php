@@ -6,6 +6,8 @@ use App\Models\VitalSign;
 use App\Policies\VitalSignPolicy;
 use App\Models\Prescription;
 use App\Policies\PrescriptionPolicy;
+use App\Models\ClinicDocument;
+use App\Policies\ClinicDocumentPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\ServiceProvider;
 
@@ -15,5 +17,6 @@ class PolicyServiceProvider extends ServiceProvider
     {
         Gate::policy(VitalSign::class, VitalSignPolicy::class);
         Gate::policy(Prescription::class, PrescriptionPolicy::class);
+        Gate::policy(ClinicDocument::class, ClinicDocumentPolicy::class);
     }
 }
